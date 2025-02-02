@@ -10,12 +10,14 @@ typedef enum
     TYPE_DOCUMENTS,
     TYPE_IMAGES,
     TYPE_MEDIA,
-    TYPE_OTHER,
+    TYPE_OTHERS,
     TYPE_PROGRAMS,
 } FileType;
 
 
 FileType get_extension_type(const char *ext);
 char *get_extension(const char *filename);
+char *decide_dest(const char *base_path, FileType ext_type);
+void move_file(const char *filepath, const char *dest_path);
 
 #endif

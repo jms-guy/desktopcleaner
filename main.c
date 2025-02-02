@@ -9,8 +9,6 @@
 
 void create_directories(const char *base_path, const char *dirs[], int num_dirs);
 void process_files(const char *desktop_path, const char *dirs[]);
-char *get_extension(const char *filename);
-//void move_file(const char *source, const char *dest);
 
 int main() 
 {
@@ -21,13 +19,47 @@ int main()
     //Create directories
     create_directories(desktop_path, dirs, num_dirs);
     //Process files in desktop directory
-    //process_files(desktop_path, dirs);
+    process_files(desktop_path, dirs);
 
     return 0;
 }
 
 void process_files(const char *base_path, const char*dirs[]) {
+    DIR *dir;
+    struct dirent *file;
+    dir = opendir(base_path); //Open desktop directory
 
+    if (dir == NULL) {
+        printf("Could not open directory: %s\n", base_path);
+        return;
+    }
+
+    while ( (file=readdir(dir))) {
+        if (strcmp(file->d_name, ".") == 0 || strcmp(file->d_name, "..") == 0) {    //Skip "." and ".." files
+            continue;
+        }
+        char *filename = file->d_name;  //Get file name
+        char *filepath = malloc(strlen(base_path) + strlen(filename) + 2);
+        sprintf(filepath, "%s/%s", base_path, filename);    //Create full path to file
+
+        char *file_ext = get_extension(filename);   //Get extension of current file
+        if (file_ext == NULL) {
+            continue;
+        }
+
+        FileType ext_type = get_extension_type(file_ext);   //Get extension type of current file
+        char *dest_path = decide_dest(base_path, ext_type);
+
+        if (dest_path == NULL) {
+            printf("Skipping file due to memory error\n");
+            continue;
+        }
+
+        free(dest_path);
+        free(filepath);
+    }
+
+    closedir(dir);
 }
 
 void create_directories(const char *base_path, const char *dirs[], int num_dirs) {
