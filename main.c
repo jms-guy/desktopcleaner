@@ -25,6 +25,7 @@ int main()
 }
 
 void process_files(const char *base_path, const char*dirs[]) {
+
     DIR *dir;
     struct dirent *file;
     dir = opendir(base_path); //Open desktop directory
@@ -39,24 +40,69 @@ void process_files(const char *base_path, const char*dirs[]) {
             continue;
         }
         char *filename = file->d_name;  //Get file name
-        char *filepath = malloc(strlen(base_path) + strlen(filename) + 2);
-        sprintf(filepath, "%s/%s", base_path, filename);    //Create full path to file
+        char *src_path = malloc(strlen(base_path) + strlen(filename) + 2);
+
+        if (src_path == NULL) {
+            printf("Memory allocation for source path failed.\n");
+            closedir(dir);
+            return;
+        }
+        sprintf(src_path, "%s/%s", base_path, filename);    //Create full path to file
 
         char *file_ext = get_extension(filename);   //Get extension of current file
         if (file_ext == NULL) {
+            free(src_path);
             continue;
         }
 
         FileType ext_type = get_extension_type(file_ext);   //Get extension type of current file
+        free(file_ext);
+
         char *dest_path = decide_dest(base_path, ext_type);
 
         if (dest_path == NULL) {
             printf("Skipping file due to memory error\n");
             continue;
         }
+        char *dest_filepath = malloc(strlen(dest_path) + strlen(filename) + 2);
+        if (dest_filepath == NULL) {
+            printf("Memory allocation for full destination filepath failed.\n");
+            free(src_path);
+            free(dest_path);
+            continue;
+        }
+        sprintf(dest_filepath, "%s/%s", dest_path, filename);   //Create full destination filepath
 
+        struct stat st;
+        if (stat(dest_filepath, &st) == 0) {  
+            fprintf(stderr, "File %s already exists at destination\n", filename);
+            free(src_path);
+            free(dest_path);
+            free(dest_filepath);
+            continue;
+        }
+        else if (errno == ENOENT) {
+            if (rename(src_path, dest_filepath) != 0) {     //Moves files to destination
+                switch (errno)
+                {
+                case EACCES:
+                    fprintf(stderr, "Permission denied moving %s\n", filename);
+                    break;
+                case ENOENT:
+                    fprintf(stderr, "Destination directory doesn't exist for %s\n", filename);
+                    break;
+                default:
+                    fprintf(stderr, "Error moving file %s: %s\n", filename, strerror(errno));
+                }
+            }
+        }
+        else {
+            fprintf(stderr, "Error checking destination path: %s\n", strerror(errno));
+        }
+
+        free(dest_filepath);    ///Free all allocated memory
         free(dest_path);
-        free(filepath);
+        free(src_path);
     }
 
     closedir(dir);

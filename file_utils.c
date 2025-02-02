@@ -7,10 +7,6 @@
 #include <errno.h>     //Error handling
 #include "file_utils.h"
 
-void move_file(const char *filepath, const char *dest_path) {
-    
-}
-
 char *decide_dest(const char *base_path, FileType ext_type) {   //Deciding destination directory for file
     char *destination;
     char *dest_path;
@@ -49,7 +45,7 @@ char *get_extension(const char *filename) { //Get extension from file
     if (!ext) {
         return NULL;
     }
-    return ext + 1;
+    return strdup(ext + 1);
 }
 
 FileType get_extension_type(const char *ext) {

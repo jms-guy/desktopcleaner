@@ -14,10 +14,9 @@ typedef enum
     TYPE_PROGRAMS,
 } FileType;
 
-
+// Utility function declarations
 FileType get_extension_type(const char *ext);
 char *get_extension(const char *filename);
 char *decide_dest(const char *base_path, FileType ext_type);
-void move_file(const char *filepath, const char *dest_path);
 
 #endif
